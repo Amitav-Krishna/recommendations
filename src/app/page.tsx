@@ -4,6 +4,7 @@ import styles from '../styles/App.module.css';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeRaw from 'rehype-raw';
+import * as Switch from '@radix-ui/react-switch';
 
 interface Post {
   id: number;
@@ -24,13 +25,39 @@ interface User {
 const App: React.FC = () => {
   // Debug state
   const [debugLog, setDebugLog] = useState<string[]>([]);
-  
+  const [showDebugLog, setShowDebugLog] = useState<boolean>(false);
+
   const addDebugLog = (message: string, data?: any) => {
     const timestamp = new Date().toISOString();
     const logEntry = `${timestamp}: ${message}` + (data ? ` - ${JSON.stringify(data)}` : '');
     setDebugLog(prev => [...prev, logEntry]);
     console.log(logEntry);
   };
+
+  // Konami code sequence
+  const konamiCode = [
+    'ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown',
+    'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight',
+    'b', 'a'
+  ];
+  const [konamiIndex, setKonamiIndex] = useState<number>(0);
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === konamiCode[konamiIndex]) {
+        setKonamiIndex((prevIndex) => prevIndex + 1);
+        if (konamiIndex + 1 === konamiCode.length) {
+          setShowDebugLog((prev) => !prev); // Toggle debug log visibility
+          setKonamiIndex(0); // Reset the sequence
+        }
+      } else {
+        setKonamiIndex(0); // Reset if the sequence is broken
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [konamiIndex]);
 
   // State Management
   const [userInput, setUserInput] = useState<string>('');
@@ -45,6 +72,13 @@ const App: React.FC = () => {
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const [name, setName] = useState<string>('');
+
+  // Color inversion state
+  const [invertColors, setInvertColors] = useState<boolean>(false);
+
+  useEffect(() => {
+    document.body.style.filter = invertColors ? 'invert(1)' : 'invert(0)';
+  }, [invertColors]);
 
   // User persistence
   useEffect(() => {
@@ -254,6 +288,7 @@ const App: React.FC = () => {
       setError(errorMessage);
     }
   };
+
   const handleLogout = () => {
     addDebugLog('User logged out');
     setUser(null);
@@ -261,15 +296,35 @@ const App: React.FC = () => {
     localStorage.removeItem('user');
   };
 
-
   if (isLoading) return <div className={styles.loading}>Loading...</div>;
 
   return (
     <div className={styles.container}>
-      <h1 className={styles.title}>The Krishna Collective</h1>
+      <div className={styles.header}>
+        <h1 className={styles.title}>The Krishna Collective</h1>
+        <div className={styles.switchContainer}>
+          <label className={styles.switchLabel} htmlFor="color-invert-switch">
+            Invert Colors
+          </label>
+          <Switch.Root
+            id="color-invert-switch"
+            className={styles.switchRoot}
+            checked={invertColors}
+            onCheckedChange={setInvertColors}
+          >
+            <Switch.Thumb className={styles.switchThumb} />
+          </Switch.Root>
+        </div>
+        {user && (
+          <button onClick={handleLogout} className={styles.logoutButton}>
+            Logout
+          </button>
+        )}
+      </div>
+
       {error && <div className={styles.error}>{error}</div>}
 
-      {process.env.NODE_ENV === 'development' && (
+      {process.env.NODE_ENV === 'development' && showDebugLog && (
         <div className={styles.debugPanel}>
           <h3>Debug Log</h3>
           <button onClick={() => setDebugLog([])}>Clear Log</button>
@@ -281,12 +336,6 @@ const App: React.FC = () => {
             ))}
           </div>
         </div>
-      )}
-
-      {user && (
-        <button onClick={handleLogout} className={styles.logoutButton}>
-          Logout
-        </button>
       )}
 
       {!user && (
