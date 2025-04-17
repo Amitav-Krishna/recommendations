@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
     console.log(`Creating new post for user ${userId}`);
     
     // Verify user exists
-    const userCheck = await query('SELECT user_id FROM users WHERE user_id = $1', [userId]);
+    const userCheck = await query('SELECT id FROM users WHERE id = $1', [userId]);
     if (userCheck.rows.length === 0) {
       return NextResponse.json(
         { error: 'User not found' },

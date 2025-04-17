@@ -123,7 +123,7 @@ const App: React.FC = () => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
-          content: userInput,
+          value: userInput, // Changed from "content" to "value"
           userId: user.id
         }),
       });
