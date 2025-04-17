@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
     
     // Return ALL required fields including user_id
     return NextResponse.json({ 
-      user_id: user.user_id,  // Make sure this matches your database column name
+      id: user.id, // Ensure this matches the frontend expectation
       name: user.name,
       email: user.email
     });

@@ -15,7 +15,7 @@ interface Post {
 }
 
 interface User {
-  user_id: number;
+  id: number;
   name: string;
   email: string;
   authenticated: boolean;
@@ -54,7 +54,7 @@ const App: React.FC = () => {
         try {
           const userData = JSON.parse(savedUser);
           setUser({
-            user_id: userData.user_id,
+            id: userData.id,
             name: userData.name,
             email: userData.email,
             authenticated: true
@@ -109,7 +109,7 @@ const App: React.FC = () => {
       return;
     }
     
-    if (!user?.user_id) {
+    if (!user?.id) {
       const errorMsg = 'Cannot create post: Please login first';
       addDebugLog(errorMsg);
       setError(errorMsg);
@@ -117,14 +117,14 @@ const App: React.FC = () => {
       return;
     }
 
-    addDebugLog(`Creating post as user ${user.user_id} (${user.name})`);
+    addDebugLog(`Creating post as user ${user.id} (${user.name})`);
     try {
       const response = await fetch('/api', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           content: userInput,
-          userId: user.user_id
+          userId: user.id
         }),
       });
       
@@ -158,14 +158,15 @@ const App: React.FC = () => {
       addDebugLog(`Login response status: ${response.status}`);
       
       const data = await response.json();
+      addDebugLog('Full server response:', data); // Log the full response for debugging
       if (response.ok) {
-        if (!data.user_id) {
-          throw new Error('Server did not return user_id');
+        if (!data.id) { // Check for the correct field name (e.g., user_id)
+          throw new Error('Server did not return id');
         }
         
         addDebugLog('Login successful, user data:', data);
         setUser({
-          user_id: data.user_id,
+          id: data.id,
           name: data.name,
           email: data.email,
           authenticated: true
@@ -197,13 +198,13 @@ const App: React.FC = () => {
       
       const data = await response.json();
       if (response.ok) {
-        if (!data.user_id) {
-          throw new Error('Server did not return user_id after signup');
+        if (!data.id) {
+          throw new Error('Server did not return id after signup');
         }
         
         addDebugLog('Signup successful');
         setUser({
-          user_id: data.user_id,
+          id: data.id,
           name: data.name,
           email: data.email,
           authenticated: true
@@ -247,10 +248,12 @@ const App: React.FC = () => {
           </div>
         </div>
       )}
+
       {user && (
         <button onClick={handleLogout} className={styles.logoutButton}>
-	  Logout
-	</button>}
+          Logout
+        </button>
+      )}
 
       {!user && (
         <div className={styles.authContainer}>

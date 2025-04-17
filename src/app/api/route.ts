@@ -13,7 +13,7 @@ export async function GET() {
         u.name as author_name,
         u.email as author_email
       FROM posts p
-      JOIN users u ON p.author = u.user_id
+      JOIN users u ON p.author = u.id
       ORDER BY p.created_at DESC
     `);
     
@@ -27,7 +27,10 @@ export async function GET() {
   } catch (error) {
     console.error('Database error:', error);
     return NextResponse.json(
-      { error: 'Database query failed', details: error.message },
+      { 
+        error: 'Database query failed', 
+        details: error instanceof Error ? error.message : 'Unknown error' 
+      },
       { status: 500 }
     );
   }
@@ -76,6 +79,46 @@ export async function POST(request: NextRequest) {
         error: 'Failed to create post', 
         details: error instanceof Error ? error.message : 'Unknown error'
       },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const { postId, userId } = await request.json();
+
+    // Validate required fields
+    if (!postId || !userId) {
+      return NextResponse.json(
+        { error: 'Missing required fields: postId or userId' },
+        { status: 400 }
+      );
+    }
+
+    console.log(`Attempting to delete post ${postId} for user ${userId}`);
+
+    // Verify the post belongs to the user
+    const postCheck = await query(
+      'SELECT id FROM posts WHERE id = $1 AND author = $2',
+      [postId, userId]
+    );
+    if (postCheck.rows.length === 0) {
+      return NextResponse.json(
+        { error: 'Post not found or does not belong to the user' },
+        { status: 404 }
+      );
+    }
+
+    // Delete the post
+    await query('DELETE FROM posts WHERE id = $1', [postId]);
+
+    console.log(`Deleted post ${postId}`);
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error('Error deleting post:', error);
+    return NextResponse.json(
+      { error: 'Failed to delete post', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     );
   }
