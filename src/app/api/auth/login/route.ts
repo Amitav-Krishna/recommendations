@@ -17,13 +17,16 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Incorrect password' }, { status: 401 });
     }
     
-    // Return ALL required fields including user_id
     return NextResponse.json({ 
       id: user.id, // Ensure this matches the frontend expectation
       name: user.name,
       email: user.email
     });
   } catch (error) {
-    return NextResponse.json({ error: 'Login failed' }, { status: 500 });
+    console.error('Login error:', error); // Log the error for debugging
+    return NextResponse.json(
+      { error: 'Login failed', details: error instanceof Error ? error.message : 'Unknown error' },
+      { status: 500 }
+    );
   }
 }

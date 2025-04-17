@@ -190,27 +190,28 @@ const App: React.FC = () => {
       
       addDebugLog(`Login response status: ${response.status}`);
       
-      const data = await response.json();
-      addDebugLog('Full server response:', data); // Log the full response for debugging
-      if (response.ok) {
-        if (!data.id) { // Check for the correct field name (e.g., user_id)
-          throw new Error('Server did not return id');
-        }
-        
-        addDebugLog('Login successful, user data:', data);
-        setUser({
-          id: data.id,
-          name: data.name,
-          email: data.email,
-          authenticated: true
-        });
-        setLoginModalOpen(false);
-        setEmail('');
-        setPassword('');
-      } else {
-        addDebugLog(`Login failed: ${data.error}`);
-        setError(data.error);
+      if (!response.ok) {
+        const errorText = await response.text(); // Log the raw response for debugging
+        addDebugLog('Unexpected response:', errorText);
+        throw new Error(`Server responded with ${response.status}: ${errorText}`);
       }
+      
+      const data = await response.json();
+      addDebugLog('Full server response:', data);
+      if (!data.id) {
+        throw new Error('Server did not return id');
+      }
+      
+      addDebugLog('Login successful, user data:', data);
+      setUser({
+        id: data.id,
+        name: data.name,
+        email: data.email,
+        authenticated: true
+      });
+      setLoginModalOpen(false);
+      setEmail('');
+      setPassword('');
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       addDebugLog(`Login error: ${errorMessage}`);
