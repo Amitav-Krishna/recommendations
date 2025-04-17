@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '../utils/db';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    console.log('Fetching posts from database');
+    console.log(`Fetching posts from database`);
     const result = await query(`
       SELECT 
         p.id as id,
@@ -19,20 +19,30 @@ export async function GET() {
     
     if (!result.rows) {
       console.log('No posts found, returning empty array');
-      return NextResponse.json([]);
+      const response = NextResponse.json([]);
+      response.headers.set('Access-Control-Allow-Origin', '*'); // Allow all origins
+      response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate'); // Prevent caching
+      return response;
     }
     
     console.log(`Found ${result.rows.length} posts`);
-    return NextResponse.json(result.rows);
+    const response = NextResponse.json(result.rows);
+    response.headers.set('Access-Control-Allow-Origin', '*'); // Allow all origins
+    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate'); // Prevent caching
+    return response;
   } catch (error) {
     console.error('Database error:', error);
-    return NextResponse.json(
+    console.error('Error details:', error instanceof Error ? error.stack : 'Unknown error');
+    const response = NextResponse.json(
       { 
         error: 'Database query failed', 
         details: error instanceof Error ? error.message : 'Unknown error' 
       },
       { status: 500 }
     );
+    response.headers.set('Access-Control-Allow-Origin', '*'); // Allow all origins
+    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate'); // Prevent caching
+    return response;
   }
 }
 
@@ -42,10 +52,13 @@ export async function POST(request: NextRequest) {
     
     // Validate required fields
     if (!value || !userId) {
-      return NextResponse.json(
+      const response = NextResponse.json(
         { error: 'Missing required fields: content or userId' },
         { status: 400 }
       );
+      response.headers.set('Access-Control-Allow-Origin', '*'); // Allow all origins
+      response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate'); // Prevent caching
+      return response;
     }
 
     console.log(`Creating new post for user ${userId}`);
@@ -53,10 +66,13 @@ export async function POST(request: NextRequest) {
     // Verify user exists
     const userCheck = await query('SELECT id FROM users WHERE id = $1', [userId]);
     if (userCheck.rows.length === 0) {
-      return NextResponse.json(
+      const response = NextResponse.json(
         { error: 'User not found' },
         { status: 404 }
       );
+      response.headers.set('Access-Control-Allow-Origin', '*'); // Allow all origins
+      response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate'); // Prevent caching
+      return response;
     }
     
     const result = await query(
@@ -71,16 +87,23 @@ export async function POST(request: NextRequest) {
     }
     
     console.log('Created new post with ID:', result.rows[0].id);
-    return NextResponse.json(result.rows[0]);
+    const response = NextResponse.json(result.rows[0]);
+    response.headers.set('Access-Control-Allow-Origin', '*'); // Allow all origins
+    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate'); // Prevent caching
+    return response;
   } catch (error) {
     console.error('Error creating post:', error);
-    return NextResponse.json(
+    console.error('Error details:', error instanceof Error ? error.stack : 'Unknown error');
+    const response = NextResponse.json(
       { 
         error: 'Failed to create post', 
         details: error instanceof Error ? error.message : 'Unknown error'
       },
       { status: 500 }
     );
+    response.headers.set('Access-Control-Allow-Origin', '*'); // Allow all origins
+    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate'); // Prevent caching
+    return response;
   }
 }
 
@@ -90,10 +113,13 @@ export async function DELETE(request: NextRequest) {
 
     // Validate required fields
     if (!postId || !userId) {
-      return NextResponse.json(
+      const response = NextResponse.json(
         { error: 'Missing required fields: postId or userId' },
         { status: 400 }
       );
+      response.headers.set('Access-Control-Allow-Origin', '*'); // Allow all origins
+      response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate'); // Prevent caching
+      return response;
     }
 
     console.log(`Attempting to delete post ${postId} for user ${userId}`);
@@ -104,22 +130,32 @@ export async function DELETE(request: NextRequest) {
       [postId, userId]
     );
     if (postCheck.rows.length === 0) {
-      return NextResponse.json(
+      const response = NextResponse.json(
         { error: 'Post not found or does not belong to the user' },
         { status: 404 }
       );
+      response.headers.set('Access-Control-Allow-Origin', '*'); // Allow all origins
+      response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate'); // Prevent caching
+      return response;
     }
 
     // Delete the post
     await query('DELETE FROM posts WHERE id = $1', [postId]);
 
     console.log(`Deleted post ${postId}`);
-    return NextResponse.json({ success: true });
+    const response = NextResponse.json({ success: true });
+    response.headers.set('Access-Control-Allow-Origin', '*'); // Allow all origins
+    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate'); // Prevent caching
+    return response;
   } catch (error) {
     console.error('Error deleting post:', error);
-    return NextResponse.json(
+    console.error('Error details:', error instanceof Error ? error.stack : 'Unknown error');
+    const response = NextResponse.json(
       { error: 'Failed to delete post', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     );
+    response.headers.set('Access-Control-Allow-Origin', '*'); // Allow all origins
+    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate'); // Prevent caching
+    return response;
   }
 }

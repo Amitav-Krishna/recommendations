@@ -115,11 +115,15 @@ const App: React.FC = () => {
   useEffect(() => {
     const fetchPosts = async () => {
       try {
-        addDebugLog('Fetching posts from /api');
-        const response = await fetch('/api');
+        addDebugLog('Fetching posts from /review/api'); // Updated log message
+        const response = await fetch('/review/api'); // Explicitly include /review prefix
         
         if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+          const errorText = await response.text();
+          if (response.status === 502) {
+            throw new Error('The server is temporarily unavailable. Please try again later.');
+          }
+          throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
         }
         
         const data = await response.json();
@@ -153,11 +157,11 @@ const App: React.FC = () => {
 
     addDebugLog(`Creating post as user ${user.id} (${user.name})`);
     try {
-      const response = await fetch('/api', {
+      const response = await fetch('/review/api', { // Explicitly include /review prefix
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
-          value: userInput, // Changed from "content" to "value"
+          value: userInput,
           userId: user.id
         }),
       });
@@ -166,6 +170,9 @@ const App: React.FC = () => {
       
       if (!response.ok) {
         const errorText = await response.text();
+        if (response.status === 502) {
+          throw new Error('The server is temporarily unavailable. Please try again later.');
+        }
         throw new Error(`Server responded with ${response.status}: ${errorText}`);
       }
       
@@ -191,7 +198,7 @@ const App: React.FC = () => {
 
     addDebugLog(`Attempting to delete post ${postId} as user ${user.id}`);
     try {
-      const response = await fetch('/api', {
+      const response = await fetch('/review/api', { // Explicitly include /review prefix
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ postId, userId: user.id }),
@@ -201,6 +208,9 @@ const App: React.FC = () => {
 
       if (!response.ok) {
         const errorText = await response.text();
+        if (response.status === 502) {
+          throw new Error('The server is temporarily unavailable. Please try again later.');
+        }
         throw new Error(`Server responded with ${response.status}: ${errorText}`);
       }
 
@@ -216,7 +226,7 @@ const App: React.FC = () => {
   const handleLogin = async () => {
     addDebugLog('Attempting login');
     try {
-      const response = await fetch('/api/auth/login', {
+      const response = await fetch('/review/api/auth/login', { // Explicitly include /review prefix
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
@@ -225,8 +235,11 @@ const App: React.FC = () => {
       addDebugLog(`Login response status: ${response.status}`);
       
       if (!response.ok) {
-        const errorText = await response.text(); // Log the raw response for debugging
+        const errorText = await response.text();
         addDebugLog('Unexpected response:', errorText);
+        if (response.status === 502) {
+          throw new Error('The server is temporarily unavailable. Please try again later.');
+        }
         throw new Error(`Server responded with ${response.status}: ${errorText}`);
       }
       
@@ -256,7 +269,7 @@ const App: React.FC = () => {
   const handleSignup = async () => {
     addDebugLog('Attempting signup');
     try {
-      const response = await fetch('/api/auth/signup', {
+      const response = await fetch('/review/api/auth/signup', { // Explicitly include /review prefix
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, email, password }),
@@ -280,6 +293,9 @@ const App: React.FC = () => {
         setSignupModalOpen(false);
       } else {
         addDebugLog(`Signup failed: ${data.error}`);
+        if (response.status === 502) {
+          throw new Error('The server is temporarily unavailable. Please try again later.');
+        }
         setError(data.error);
       }
     } catch (error) {

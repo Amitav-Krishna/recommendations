@@ -15,7 +15,7 @@ interface PostListProps {
 function PostList({ posts, userId, onDelete }: PostListProps) {
   const handleDelete = async (postId: string) => {
     try {
-      const response = await fetch('/api', {
+      const response = await fetch('/api', { // Removed /review prefix
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ postId, userId }),
