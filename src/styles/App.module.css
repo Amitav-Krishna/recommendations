@@ -206,7 +206,7 @@
   color: #555;
   margin: 1rem 0;
 }
-/* Add to your existing styles */
+
 .listItem {
   margin-bottom: 1.5rem;
   padding: 1rem;
@@ -216,18 +216,54 @@
 }
 
 .postMeta {
-  margin-top: 0.5rem;
-  font-size: 0.9rem;
-  color: #666;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  margin-top: 10px;
+  padding: 5px 0;
+  border-top: 1px solid #ddd;
 }
 
 .authorInfo {
-  font-style: italic;
+  flex: 1;
+  text-align: left;
+  font-size: 12px;
+  color: #555;
+}
+
+.deleteButton {
+  background-color: #ff4d4d;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 4px 8px;
+  cursor: pointer;
+  font-size: 12px;
+  margin: 0 10px;
+  transition: background-color 0.3s ease;
+}
+
+.deleteButton:hover {
+  background-color: #e60000;
+}
+
+.deleteButton:active {
+  background-color: #cc0000;
 }
 
 .postDate {
+  flex: 1;
+  text-align: right;
+  font-size: 12px;
   color: #888;
+  cursor: pointer;
+  transition: color 0.3s ease;
+}
+
+.postDate:hover {
+  text-decoration: underline;
+}
+
+.ownPostDate {
+  color: red !important;
 }

@@ -146,6 +146,39 @@ const App: React.FC = () => {
     }
   };
 
+  const handleDelete = async (postId: number) => {
+    if (!user?.id) {
+      const errorMsg = 'Cannot delete post: Please login first';
+      addDebugLog(errorMsg);
+      setError(errorMsg);
+      setLoginModalOpen(true);
+      return;
+    }
+
+    addDebugLog(`Attempting to delete post ${postId} as user ${user.id}`);
+    try {
+      const response = await fetch('/api', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ postId, userId: user.id }),
+      });
+
+      addDebugLog(`DELETE response status: ${response.status}`);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Server responded with ${response.status}: ${errorText}`);
+      }
+
+      addDebugLog(`Deleted post with ID: ${postId}`);
+      setPosts(posts.filter((post) => post.id !== postId));
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      addDebugLog(`Error deleting post: ${errorMessage}`);
+      setError(errorMessage);
+    }
+  };
+
   const handleLogin = async () => {
     addDebugLog('Attempting login');
     try {
@@ -336,7 +369,21 @@ const App: React.FC = () => {
               <span className={styles.authorInfo}>
                 {post.author_name || 'Unknown'} ({post.author_email || 'no email'})
               </span>
-              <span className={styles.postDate}>
+              <span
+                className={`${styles.postDate} ${
+                  user?.id === post.author ? styles.ownPostDate : ''
+                }`}
+                onClick={() => {
+                  if (user?.id === post.author) {
+                    const confirmDelete = window.confirm(
+                      'Are you sure you want to delete this post?'
+                    );
+                    if (confirmDelete) {
+                      handleDelete(post.id);
+                    }
+                  }
+                }}
+              >
                 {new Date(post.created_at).toLocaleString()}
               </span>
             </div>
